@@ -12,6 +12,7 @@ namespace BeginnerBot.Services
     {
         protected readonly ITelegramBotClient _botClient;
         protected readonly IUpdateHandlerService _updateHandlerService;
+        protected readonly CancellationTokenSource _cancellationTokenSource;
 
         public BotConnectionService
         (
@@ -21,9 +22,12 @@ namespace BeginnerBot.Services
         {
             _botClient = new TelegramBotClient(token);
             _updateHandlerService = updateHandlerService;
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public async Start(CancellationToken cancellationToken)
+        #region Bot initialization
+
+        public async Task Start()
         {
             var receiverOptions = new ReceiverOptions
             {
@@ -35,15 +39,31 @@ namespace BeginnerBot.Services
                 updateHandler: HandleUpdateAsync,
                 pollingErrorHandler: HandlePollingErrorAsync,
                 receiverOptions: receiverOptions,
-                cancellationToken: cancellationToken
+                cancellationToken: _cancellationTokenSource.Token
              );
 
             await _botClient.SendTextMessageAsync
             (
                 chatId: "760059843",
-                text: "Bot connected via polling"
+                text: "Bot client connected via polling"
             );
+            Console.WriteLine("Bot client initialized");
         }
+
+        public async Task Stop()
+        {
+            await _botClient.SendTextMessageAsync
+            (
+                chatId: "760059843",
+                text: "Bot client disconnected"
+            );
+            _cancellationTokenSource.Cancel();
+            Console.WriteLine("Bot client stopped");
+        }
+
+        #endregion
+
+        #region Handling
 
         public async Task HandleUpdateAsync(ITelegramBotClient client, Update update, CancellationToken cancellationToken)
         {
@@ -54,8 +74,13 @@ namespace BeginnerBot.Services
             {
                 await _updateHandlerService.HandleAsync(client, update, cancellationToken);
             }
+            catch(ApiRequestException exception)
+            {
+                await HandlePollingErrorAsync(client, exception, cancellationToken);
+            }
             catch (Exception exception)
             {
+                HandleLocalError(exception);
             }
 
             Console.WriteLine("Update processed successfully");
@@ -70,11 +95,18 @@ namespace BeginnerBot.Services
             };
 
             Console.WriteLine(errorMessage);
-}
+        }
 
         public void HandleLocalError(Exception exception)
         {
-            throw new NotImplementedException();
+            var errorMessage = exception switch
+            {
+                _ => exception.Message
+            };
+
+            Console.WriteLine(errorMessage);
         }
+
+        #endregion
     }
 }
