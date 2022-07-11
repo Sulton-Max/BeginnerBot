@@ -228,6 +228,28 @@ namespace BeginnerBot.Services
                 longitude: 14.418288f,
                 cancellationToken: cancellationToken
             );
+
+            // Send reply keyboard
+            var replyMarkup = new ReplyKeyboardMarkup(new KeyboardButton[]
+            {
+                "Send location", "What this bot can do ?"
+            })
+            {
+                ResizeKeyboard = true
+            };
+            await botClient.SendTextMessageAsync
+            (
+                chatId: update.Message.Chat.Id,
+                text: "Choose action :",
+                replyMarkup: replyMarkup,
+                cancellationToken: cancellationToken
+            );
+
+            // Send multi row keyboard 
+            //var multiRowKeyboard = new ReplyKeyboardMarkup
+            //(
+            //    new KeyboardButton[] 
+            //)
         }
 
         public async Task HandlePollUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
