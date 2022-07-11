@@ -25,7 +25,6 @@ namespace BeginnerBot.Services
             return handler;
         }
 
-
         public async Task HandleAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             // Handling specific update
@@ -246,10 +245,109 @@ namespace BeginnerBot.Services
             );
 
             // Send multi row keyboard 
-            //var multiRowKeyboard = new ReplyKeyboardMarkup
-            //(
-            //    new KeyboardButton[] 
-            //)
+            var multiRowKeyboard = new ReplyKeyboardMarkup
+            (
+                new[]
+                {
+                    new KeyboardButton[] { "One", "Two" },
+                    new KeyboardButton[] { "Three", "Four" }
+                }
+            )
+            {
+                ResizeKeyboard = true
+            };
+            await botClient.SendTextMessageAsync
+            (
+                chatId: update.Message.Chat.Id,
+                text: "Multi-row keyboard",
+                replyMarkup: multiRowKeyboard,
+                cancellationToken: cancellationToken
+            );
+
+            // Request contact and location
+            var requestKeyboard = new ReplyKeyboardMarkup
+            (
+                new[]
+                {
+                    KeyboardButton.WithRequestLocation("Share location"),
+                    KeyboardButton.WithRequestContact("Share contact"),
+                    KeyboardButton.WithRequestPoll("Option"),
+                }
+            )
+            {
+                ResizeKeyboard = true
+            };
+            await botClient.SendTextMessageAsync
+            (
+                chatId: update.Message.Chat.Id,
+                text: "Request keyboard",
+                replyMarkup: requestKeyboard,
+                cancellationToken: cancellationToken
+            );
+
+            // Remove keyboard
+            await botClient.SendTextMessageAsync
+            (
+                chatId: update.Message.Chat.Id,
+                text: "Removing keyboard",
+                replyMarkup: new ReplyKeyboardRemove(),
+                cancellationToken: cancellationToken
+            );
+
+            // Send inline keyboard 
+            var inlineKeyboard = new InlineKeyboardMarkup
+            (
+                new[]
+                {
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("1.1", "11"),
+                        InlineKeyboardButton.WithCallbackData("1.2", "12")
+                    },
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("2.1", "22"),
+                        InlineKeyboardButton.WithCallbackData("2.2", "22")
+                    }
+                }
+            );
+            await botClient.SendTextMessageAsync
+            (
+                chatId: update.Message.Chat.Id,
+                text: "A message with inline keyboard",
+                replyMarkup: inlineKeyboard,
+                cancellationToken: cancellationToken
+            );
+
+            // Send URL button
+            await botClient.SendTextMessageAsync
+            (
+                chatId: update.Message.Chat.Id,
+                text: "Open a repo : ",
+                replyMarkup: new InlineKeyboardMarkup
+                (
+                    InlineKeyboardButton.WithUrl("Link to a repo", "https://github.com/TelegramBots/Telegram.Bot")
+                ),
+                cancellationToken: cancellationToken
+            );
+
+            // Send with switch inline button
+            await botClient.SendTextMessageAsync
+            (
+                chatId: update.Message.Chat.Id,
+                text: "A message with an inline keyboard : ",
+                replyMarkup: new InlineKeyboardMarkup
+                (
+                    new[]
+                    {
+                        InlineKeyboardButton.WithSwitchInlineQuery("Switch inline mode"),
+                        InlineKeyboardButton.WithSwitchInlineQuery("Switch inline mode", "query"),
+                        InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("With inline mode"),
+                        InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Switch inline mode", "query"),
+                    }
+                ),
+                cancellationToken: cancellationToken
+            );
         }
 
         public async Task HandlePollUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
